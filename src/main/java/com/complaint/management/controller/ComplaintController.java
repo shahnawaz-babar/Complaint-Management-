@@ -7,6 +7,8 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,9 +32,10 @@ public class ComplaintController {
 	@Autowired
 	private UserService userService;
 
-	@GetMapping("{userName}")
-	public ResponseEntity<?> ComplaintAll(@PathVariable String userName) {
-		User user = userService.findUserName(userName).orElse(null);
+	@GetMapping
+	public ResponseEntity<?> ComplaintAll() {
+		Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+		User user = userService.findUserName(authentication.getName()).orElse(null);
 		if (user != null) {
 			List<Complaint> list = user.getComplaints();
 			return new ResponseEntity<>(list, HttpStatus.OK);
@@ -41,9 +44,10 @@ public class ComplaintController {
 		}
 	}
 
-	@PostMapping("{userName}")
-	public ResponseEntity<?> compliantCreate(@RequestBody Complaint complaint, @PathVariable String userName) {
-		User user = userService.findUserName(userName).orElse(null);
+	@PostMapping
+	public ResponseEntity<?> compliantCreate(@RequestBody Complaint complaint) {
+		Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+		User user = userService.findUserName(authentication.getName()).orElse(null);
 		if (user != null) {
 			complaintService.createComplaint(complaint, user);
 			return new ResponseEntity<>(user, HttpStatus.CREATED);
@@ -58,12 +62,12 @@ public class ComplaintController {
 		return complaintService.getById(id);
 	}
 
-	@DeleteMapping("{userName}/{id}")
-	public ResponseEntity<?> complaintDelete(@PathVariable ObjectId id, @PathVariable String userName) {
-		User user = userService.findUserName(userName).orElse(null);
+	@DeleteMapping("{id}")
+	public ResponseEntity<?> complaintDelete(@PathVariable ObjectId id) {
+		Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+		User user = userService.findUserName(authentication.getName()).orElse(null);
 		if (user != null) {
-			complaintService.deleteComplaint(id, user);
-			return new ResponseEntity<>(user, HttpStatus.OK);
+			return complaintService.deleteComplaint(id, user);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
@@ -71,10 +75,11 @@ public class ComplaintController {
 
 	}
 
-	@PutMapping("{userName}/{id}")
-	public ResponseEntity<?> complaintUpdate(@PathVariable ObjectId id, @PathVariable String userName,
+	@PutMapping("{id}")
+	public ResponseEntity<?> complaintUpdate(@PathVariable ObjectId id,
 			@RequestBody Complaint complaint) {
-		User user = userService.findUserName(userName).orElse(null);
+		Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+		User user = userService.findUserName(authentication.getName()).orElse(null);
 		if (user != null) {
 			return complaintService.updateComplaint(id, complaint, user);
 		} else {

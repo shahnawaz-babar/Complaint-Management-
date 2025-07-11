@@ -1,10 +1,15 @@
 package com.complaint.management.controller;
 
+import java.util.Arrays;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,17 +29,10 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
-	@PostMapping
-	public ResponseEntity<?> userCreate(@RequestBody User user) {
-		user.setRoles("USER");
-		userService.createUser(user);
-		return new ResponseEntity<>(user, HttpStatus.OK);
-	}
-
-	@GetMapping("{userName}")
-	public ResponseEntity<?> findByName(@PathVariable String userName) {
-
-		User user = userService.findUserName(userName).orElse(null);
+	@GetMapping
+	public ResponseEntity<?> findByName() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User user = userService.findUserName(authentication.getName()).orElse(null);
 		if (user != null) {
 			return new ResponseEntity<>(user, HttpStatus.OK);
 		} else {
@@ -42,20 +40,16 @@ public class UserController {
 		}
 	}
 
-	@GetMapping
-	public List<User> allUser() {
-		return userService.getUsers();
+	@DeleteMapping
+	public ResponseEntity<?> userDelete() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return userService.deleteUser(authentication.getName());
 	}
 
-	@DeleteMapping("{userName}")
-	public ResponseEntity<?> userDelete(@PathVariable String userName) {
-		return userService.deleteUser(userName);
-	}
-
-	// sirf ye kaam nhi kara or
-	@PutMapping("{userName}")
-	public ResponseEntity<?> userUpdate(@PathVariable String userName, @RequestBody User user) {
-		return userService.updateUser(user, userName);
+	@PutMapping
+	public ResponseEntity<?> userUpdate(@RequestBody User user) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return userService.updateUser(user, authentication.getName());
 	}
 
 }

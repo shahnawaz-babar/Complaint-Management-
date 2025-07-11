@@ -27,7 +27,7 @@ public class User {
 	@Indexed(unique = true)
 	private String userName;
 	private String password;
-	private String roles;
+	private List<String> roles;
 	@DBRef
 	List<Complaint> complaints=new ArrayList<Complaint>();
 	

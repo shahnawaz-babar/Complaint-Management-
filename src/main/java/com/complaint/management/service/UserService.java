@@ -1,6 +1,7 @@
 package com.complaint.management.service;
 
 import java.lang.StackWalker.Option;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.complaint.management.entity.User;
@@ -18,11 +20,23 @@ public class UserService {
 
 	@Autowired
 	private UserRepo userRepo;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	@Autowired
+	private UserService userService;
+	
 
 	public void createUser(User user) {
 		userRepo.save(user);
 	}
 
+	public void createNewUser(User user) {		
+		user.setRoles(Arrays.asList("USER")); // override any roles
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		userRepo.save(user);
+	}
+
+	
 	public List<User> getUsers() {
 		return userRepo.findAll();
 	}
@@ -44,13 +58,12 @@ public class UserService {
 
 	public ResponseEntity<?> updateUser(User newEntry, String userName) {
 		User old = userRepo.findByUserName(userName).orElse(null);
-		if (old != null) {
-
+		if (old != null) {			 
 			old.setPassword(newEntry.getPassword() != null && !newEntry.getPassword().isEmpty() ? newEntry.getPassword()
 					: old.getPassword());
 			old.setUserName(newEntry.getUserName() != null && !newEntry.getUserName().isBlank() ? newEntry.getUserName()
 					: old.getUserName());
-			userRepo.save(old);
+			userService.createNewUser(old);
 			return new ResponseEntity<>(old, HttpStatus.CREATED);
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);

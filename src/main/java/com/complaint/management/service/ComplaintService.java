@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.complaint.management.dto.AdminStatsResponse;
 import com.complaint.management.entity.Complaint;
 import com.complaint.management.entity.User;
 import com.complaint.management.repository.ComplaintRepo;
@@ -24,6 +25,8 @@ public class ComplaintService {
 	private ComplaintRepo complaintRepo;
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private UserRepo userRepo;
 
 	public ResponseEntity<?> createComplaint(Complaint complain, User user) {
 		complain.setCreateAt(LocalDateTime.now());
@@ -63,8 +66,6 @@ public class ComplaintService {
 							? newcomplaint.getDescription()
 							: oldcomplaint.getDescription());
 			oldcomplaint.setUpdatedAt(LocalDateTime.now());
-
-			oldcomplaint.setUpdatedAt(LocalDateTime.now());
 			complaintRepo.save(oldcomplaint);
 			userService.createUser(user);
 			return new ResponseEntity<>(oldcomplaint, HttpStatus.OK);
@@ -95,5 +96,16 @@ public class ComplaintService {
 		List<Complaint> list = complaintRepo.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
 		return new ResponseEntity<>(list, HttpStatus.OK);
 	}
+	
+	
+	public AdminStatsResponse getStats() {
+	    long totalComplaints = complaintRepo.count();
+	    long pending = complaintRepo.countByStatusIgnoreCase("pending");
+	    long inProgress = complaintRepo.countByStatusIgnoreCase("inProgress");
+	    long resolved = complaintRepo.countByStatusIgnoreCase("resolved");
+	    long totalUsers = userRepo.count();
+	    return new AdminStatsResponse(totalComplaints,  resolved,pending, inProgress,totalUsers); // yaha apn ne constructor ki initialxe kara 
+	}
+	
 
 }

@@ -12,6 +12,6 @@ public interface UserRepo extends MongoRepository<User,ObjectId>{
 
 	void deleteByUserName(String userName);
 	Optional<User> findByUserName(String userName);
-
+	long count();
 	
 }
